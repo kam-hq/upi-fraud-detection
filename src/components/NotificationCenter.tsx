@@ -43,6 +43,11 @@ const NotificationCenter: React.FC = () => {
     return cleanup;
   }, [addNotification, user]);
 
+  // Don't render anything if user is not logged in or not an investigator
+  if (!user || user.role !== 'investigator') {
+    return null;
+  }
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'success':
