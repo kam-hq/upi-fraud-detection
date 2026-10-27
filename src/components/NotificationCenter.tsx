@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { X, AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
 
 const NotificationCenter: React.FC = () => {
   const { notifications, dismissNotification } = useNotifications();
   const { addNotification } = useNotifications();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [ws, setWs] = useState<WebSocket | null>(null);
 
   useEffect(() => {
+    // Only start notifications for logged-in investigators
+    if (!user || user.role !== 'investigator') {
+      return;
+    }
+
     // Mock WebSocket connection - replace with real WebSocket
     const mockWebSocket = () => {
       // Simulate incoming alerts
@@ -34,7 +41,7 @@ const NotificationCenter: React.FC = () => {
     const cleanup = mockWebSocket();
     
     return cleanup;
-  }, [addNotification]);
+  }, [addNotification, user]);
 
   const getIcon = (type: string) => {
     switch (type) {

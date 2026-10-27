@@ -4,12 +4,12 @@ interface User {
   id: string;
   phone: string;
   name: string;
-  role: 'investigator' | 'admin';
+  role: 'investigator' | 'admin' | 'public';
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (phone: string, otp: string) => Promise<boolean>;
+  login: (phone: string, otp: string, userType: 'investigator' | 'public') => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -37,14 +37,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (phone: string, otp: string): Promise<boolean> => {
+  const login = async (phone: string, otp: string, userType: 'investigator' | 'public'): Promise<boolean> => {
     // Mock authentication - replace with real API call
-    if (otp === '123456') {
+    if ((userType === 'investigator' && otp === '123456') || (userType === 'public' && otp === '654321')) {
       const mockUser: User = {
         id: '1',
         phone,
-        name: 'Security Investigator',
-        role: 'investigator'
+        name: userType === 'investigator' ? 'Security Investigator' : 'Public User',
+        role: userType === 'investigator' ? 'investigator' : 'public'
       };
       setUser(mockUser);
       localStorage.setItem('ai-upi-user', JSON.stringify(mockUser));

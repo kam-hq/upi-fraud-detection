@@ -1,20 +1,27 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Shield, Phone, Lock } from 'lucide-react';
+import { Shield, Phone, Lock, Search, UserCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'select' | 'phone' | 'otp'>('select');
+  const [userType, setUserType] = useState<'investigator' | 'public'>('investigator');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const { user, login } = useAuth();
 
   if (user) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to={user.role === 'public' ? '/public-search' : '/dashboard'} />;
   }
+
+  const handleUserTypeSelect = (type: 'investigator' | 'public') => {
+    setUserType(type);
+    setStep('phone');
+    setError('');
+  };
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +39,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const success = await login(phone, otp);
+      const success = await login(phone, otp, userType);
       if (!success) {
         setError('Invalid OTP. Please try again.');
       }
@@ -51,12 +58,41 @@ const Login: React.FC = () => {
           <h2 className="mt-6 text-3xl font-extrabold text-white">
             AI UPI Trust Portal
           </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Secure access for fraud investigators
-          </p>
+          {step === 'select' ? (
+            <p className="mt-2 text-sm text-gray-400">
+              Choose your access type
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-gray-400">
+              {userType === 'investigator' ? 'Secure access for fraud investigators' : 'Public trust score lookup'}
+            </p>
+          )}
         </div>
 
-        {step === 'phone' ? (
+        {step === 'select' ? (
+          <div className="mt-8 space-y-4">
+            <button
+              onClick={() => handleUserTypeSelect('investigator')}
+              className="w-full flex items-center justify-center px-6 py-4 border border-gray-600 rounded-lg text-white bg-gray-800 hover:bg-gray-700 transition-colors"
+            >
+              <UserCheck className="w-6 h-6 mr-3 text-blue-400" />
+              <div className="text-left">
+                <div className="font-medium">Security Investigator</div>
+                <div className="text-sm text-gray-400">Full access to fraud detection system</div>
+              </div>
+            </button>
+            <button
+              onClick={() => handleUserTypeSelect('public')}
+              className="w-full flex items-center justify-center px-6 py-4 border border-gray-600 rounded-lg text-white bg-gray-800 hover:bg-gray-700 transition-colors"
+            >
+              <Search className="w-6 h-6 mr-3 text-green-400" />
+              <div className="text-left">
+                <div className="font-medium">Public Lookup</div>
+                <div className="text-sm text-gray-400">Check trust score for phone/UPI ID</div>
+              </div>
+            </button>
+          </div>
+        ) : step === 'phone' ? (
           <form className="mt-8 space-y-6" onSubmit={handlePhoneSubmit}>
             <div>
               <label htmlFor="phone" className="sr-only">
@@ -125,7 +161,7 @@ const Login: React.FC = () => {
             <div className="flex space-x-4">
               <button
                 type="button"
-                onClick={() => setStep('phone')}
+                onClick={() => setStep('select')}
                 className="flex-1 py-2 px-4 border border-gray-600 text-gray-300 text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 Back
@@ -141,7 +177,7 @@ const Login: React.FC = () => {
 
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                Demo: Use OTP 123456 to login
+               Demo: Use OTP 123456 for investigators, 654321 for public access
               </p>
             </div>
           </form>
