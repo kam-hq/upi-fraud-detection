@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import Login from './pages/Login';
+import PublicSearch from './pages/PublicSearch';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import TransactionDetail from './pages/TransactionDetail';
@@ -20,6 +21,7 @@ function App() {
             <NotificationCenter />
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/public-search" element={<PublicSearch />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />

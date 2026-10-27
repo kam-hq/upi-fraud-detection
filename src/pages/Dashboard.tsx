@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import TrustScoreCard from '../components/TrustScoreCard';
 import TransactionList from '../components/TransactionList';
+import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
   Shield, 
   AlertTriangle, 
   Activity,
   Users,
-  DollarSign 
+  DollarSign,
+  Search,
+  Phone,
+  AtSign
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -20,6 +24,7 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalTransactions: 0,
     riskTransactions: 0,
@@ -46,6 +51,10 @@ const Dashboard: React.FC = () => {
     },
   ]);
 
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResult, setUserSearchResult] = useState<any>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     // Mock API call - replace with real data
     setStats({
@@ -57,6 +66,41 @@ const Dashboard: React.FC = () => {
       fraudPrevented: 1230000,
     });
   }, []);
+
+  const handleUserSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userSearchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      // Mock API call - replace with real API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const isPhone = /^\d{10}$/.test(userSearchQuery);
+      const isUPI = userSearchQuery.includes('@');
+      
+      if (!isPhone && !isUPI) {
+        alert('Please enter a valid 10-digit phone number or UPI ID');
+        return;
+      }
+
+      const mockResult = {
+        identifier: userSearchQuery,
+        type: isPhone ? 'phone' : 'upi',
+        trustScore: Math.floor(Math.random() * 100),
+        riskLevel: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'][Math.floor(Math.random() * 4)],
+        confidence: 85 + Math.floor(Math.random() * 15),
+        lastUpdated: new Date().toISOString(),
+        transactionCount: Math.floor(Math.random() * 500) + 10,
+      };
+      
+      setUserSearchResult(mockResult);
+    } catch (err) {
+      alert('Search failed. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const StatCard = ({ 
     title, 
@@ -119,6 +163,73 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* User Lookup Section */}
+      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <Search className="w-5 h-5 mr-2 text-blue-400" />
+          User Trust Score Lookup
+        </h3>
+        <form onSubmit={handleUserSearch} className="flex gap-4">
+          <div className="flex-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={userSearchQuery}
+              onChange={(e) => setUserSearchQuery(e.target.value)}
+              placeholder="Enter phone number (10 digits) or UPI ID (user@bank)"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isSearching}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSearching ? 'Searching...' : 'Search'}
+          </button>
+        </form>
+        
+        {userSearchResult && (
+          <div className="mt-4 p-4 bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {userSearchResult.type === 'phone' ? (
+                  <Phone className="w-5 h-5 mr-2 text-blue-400" />
+                ) : (
+                  <AtSign className="w-5 h-5 mr-2 text-green-400" />
+                )}
+                <div>
+                  <p className="text-white font-medium">{userSearchResult.identifier}</p>
+                  <p className="text-gray-400 text-sm">
+                    Trust Score: <span className={`font-bold ${
+                      userSearchResult.trustScore >= 80 ? 'text-green-400' :
+                      userSearchResult.trustScore >= 60 ? 'text-yellow-400' :
+                      userSearchResult.trustScore >= 40 ? 'text-orange-400' : 'text-red-400'
+                    }`}>
+                      {userSearchResult.trustScore}/100
+                    </span> | Risk: <span className={`font-medium ${
+                      userSearchResult.riskLevel === 'LOW' ? 'text-green-400' :
+                      userSearchResult.riskLevel === 'MEDIUM' ? 'text-yellow-400' :
+                      userSearchResult.riskLevel === 'HIGH' ? 'text-orange-400' : 'text-red-400'
+                    }`}>
+                      {userSearchResult.riskLevel}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate(`/user-profile/${encodeURIComponent(userSearchResult.identifier)}`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              >
+                View Details
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
@@ -139,7 +250,7 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           title="Average Trust Score"
-          value={`${stats.avgTrustScore}/100`}
+          value={\`${stats.avgTrustScore}/100`}
           icon={Shield}
           trend="up"
           trendValue="+3%"

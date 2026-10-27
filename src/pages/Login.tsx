@@ -14,7 +14,7 @@ const Login: React.FC = () => {
   const { user, login } = useAuth();
 
   if (user) {
-    return <Navigate to={user.role === 'public' ? '/public-search' : '/dashboard'} />;
+    return <Navigate to={user.role === 'public' ? '/public-search' : '/dashboard'} replace />;
   }
 
   const handleUserTypeSelect = (type: 'investigator' | 'public') => {
